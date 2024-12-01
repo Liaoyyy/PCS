@@ -16,13 +16,23 @@ Fs = 10;             % (kHz)
 Fs = Fs*1e3;
 Ts = 1/Fs;
 
-%% Base values
+%% Base values for AC link
 Wbase = 2*pi*50;    % (rad/s)
 Vbase = 1;
 Sbase = 1;
 Ibase = Sbase/Vbase;
 Zbase = Vbase/Ibase;
 Ybase = 1/Zbase;
+
+%% Base values for DC link
+Vbase_DC = 1;
+Pbase_DC = 1;
+Ibase_DC = Pbase_DC / Vbase_DC;
+Zbase = Vbase_DC / Ibase_DC;
+
+%% DC filter paramters
+L = 0.05;
+C = 0.02;
 
 %% AC filter parameters
 Lf = 0.05;
