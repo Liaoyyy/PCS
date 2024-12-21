@@ -74,7 +74,7 @@ dw = ((w0 - w) + m / SOC *(P0-p)) * wf; % adaptive droop control
 
 
 % Angle difference
-dtheta = (w - wg)*Wbase;
+dtheta = (w - wg);
 % dtheta = (w - wg);
 
 % Voltage controller
@@ -153,7 +153,7 @@ Rf = 0.01;
 Cf = 0.02 / Wbase;
 Lg = 2*0.00079577;
 Rg = 0.1;
-wg = 0.95;
+wg = 0.95 * Wbase;
 
 % Droop
 wf = 2 * pi * 10;
@@ -185,7 +185,7 @@ vd = 0.9996;
 vq = 0.02705;
 igd = 0.3113;
 igq = 0.04949;
-w = 0.95;
+w = 0.95 * Wbase;
 % theta = 0.1547;
 theta = 0.14;
 
