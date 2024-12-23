@@ -54,7 +54,7 @@ f1_trans = [di_bat;dv_dc;dv_err;di_err];
 T = jacobian(x2,x1);
 B = expand(x2 - T * x1);
 
-% x1 = inv(T) * (x2 -B) redefine x2
+% x1 = inv(T) * (x2 -B), redefine x2
 syms i_bat_ref duty;
 x2 = [i_bat; v_dc; i_bat_ref; duty];
 x1_trans = inv(T) * (x2 - B);

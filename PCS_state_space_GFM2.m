@@ -1,4 +1,5 @@
-clc;clear;
+%clc;
+clear;
 
 %% Base value
 BaseValue();
@@ -6,7 +7,7 @@ BaseValue();
 %% AC link
 
 % state variables
-syms idr iqr ed eq id iq vd vq igd igq w delta
+syms vdi vqi idi iqi id iq vd vq igd igq w delta
 
 % other variables
 syms Lg Rg % Line impedance
@@ -26,6 +27,18 @@ p = vd*id + vq*iq;
 
 % System equation
 
+% Voltage PI controller
+dvdi = vd_ref - vd;
+dvqi = vq_ref - vq;
+
+
+% Current PI controller
+didi = kpv_ac * dvdi + kiv_ac * vdi - id;
+diqi = kpv_ac * dvqi + kiv_ac * vqi - iq;
+
+ed = kpi_ac * didi + kii_ac * idi;
+eq = kpi_ac * diqi + kii_ac * iqi;
+
 % LC filter
 did = (ed - vd + w * Lf * iq - Rf * id) / Lf;
 diq = (eq - vq - w * Lf * id - Rf * iq) / Lf;
@@ -34,13 +47,6 @@ dvq = (iq - igq - w * Cf * vd) / Cf;
 digd = (vd - vgd + w * Lg * igq - Rg * igd) / Lg;
 digq = (vq - vgq - w * Lg * igd - Rg * igq) / Lg;
 
-% Voltage PI controller
-didr = - kpv_ac * dvd + kiv_ac * (vd_ref - vd);
-diqr = - kpv_ac * dvq + kiv_ac * (vq_ref - vq);
-
-% Current PI controller
-ded = kpi_ac * (didr - did) + kii_ac * (idr - id);
-deq = kpi_ac * (diqr - diq) + kii_ac * (iqr - iq);
 
 % Droop control
 dw = ((Pr-p)*Dw + W0 - w)*wf;
@@ -48,30 +54,32 @@ ddelta = w - wg;
 
 
 %% Caculate the state matrix
-state = [idr; iqr; ed; eq; id; iq; vd; vq; igd; igq; w; delta];
-f_xu = [didr; diqr; ded; deq; did; diq; dvd; dvq; digd; digq; dw; ddelta];
+state = [vdi; vqi; idi; iqi; id; iq; vd; vq; igd; igq; w; delta];
+f_xu = [dvdi; dvqi; didi; diqi; did; diq; dvd; dvq; digd; digq; dw; ddelta];
 
 Amat = jacobian(f_xu,state);
 
 %% Set numerical number
-Lg = 0.25/100/pi*2;
-Rg = 0.25/5*2;
+Xg = 0.3;
+Lg = Xg/Wbase;
+Rg = Xg/5;
+
 Cf = 0.02/Wbase;
 Lf = 0.05/Wbase;
 Rf = 0.01;
 
 vgD = 1;
 vgQ = 0;
-wg = 0.95 * Wbase;
+wg = Wbase;
 
 wf = 2*pi*10;
-Dw = 0.08*Wbase/Sbase;
+Dw = 0.05*Wbase/Sbase;
 Pr = 0;
 W0 = 0;
 
 wv_ac = 250*2*pi;
 kpv_ac = Cf*wv_ac;
-kiv_ac = Cf*wv_ac^2/4*100;
+kiv_ac = Cf*wv_ac^2/4*50;
 
 wi_ac = 1000*2*pi;
 kpi_ac = Lf*wi_ac;
@@ -80,20 +88,23 @@ kii_ac = Lf*(wi_ac^2)/4;
 vd_ref = 1;
 vq_ref = 0;
 
+P = 0.5;
+Q = 0.2;
+
 
 %% Set steady state of state variables
-idr = 0.6234;
-iqr = 0.06925;
-ed = 1.004;
-eq = 0.03765;
-id = 0.6234;
-iq = 0.06925;
-vd = 0.9996;
-vq = 0.02709;
-igd = 0.6239;
-igq = 0.0511;
-w = 0.95 * Wbase;
-delta = 0.3066;
+% vdi
+% vqi
+% idi 
+% iqi
+id = P/vd;
+iq = -Q/vd;
+vd = 1;
+vq = 0;
+igd = P/vd;
+igq = -Q/vd;
+w = Wbase;
+delta = 5/180*pi;
 
 %% Replace symbolic by numerical number
 Amat = subs(Amat,'Rg',Rg);
@@ -129,7 +140,7 @@ Amat = subs(Amat,'delta',delta);
 
 
 %% Sweep parameters
-Amat = double(Amat)
+Amat = double(Amat);
 
 EigVec = eig(Amat);
 EigVecHz = EigVec/(2*pi);

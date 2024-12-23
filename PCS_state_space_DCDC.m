@@ -1,4 +1,4 @@
-% clc;
+clc;
 clear;
 
 %% DC link
@@ -8,13 +8,10 @@ syms i_bat v_dc i_bat_ref duty_cycle;
 
 % other parameters
 syms C_dc L_dc; % filter parameters
-
 syms v_ocv R_bat; % battery parameters
-
 syms kpv_dc kiv_dc kpi_dc kii_dc; % Controller parameters
-
 syms v_dc_ref; % reference dc voltage
-syms i_o;
+syms i_o; % output current
 
 %% DC link equation
 
