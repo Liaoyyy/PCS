@@ -1,5 +1,5 @@
 % This code proves the conclusion: 
-% Nonlinear transformation between two state variables will change the eigenvalues of a nonlinear system!!
+% Nonlinear transformation between two state variables won't change the eigenvalues of a nonlinear system!!
 % Please refer to the nonlinear.md for theoretical proof
 
 % The following is an example of a Grid Following converter
@@ -102,10 +102,9 @@ n = length(x1);
 h_diff = [];
 h_inverse_diff = [];
 % get dx2/dx1 = h'(x1) dx1/dx2 = (h^{-1}(x2))'
-for i = 1:n
-    h_diff = [h_diff, diff(h,x1(i))];
-    h_inverse_diff = [h_inverse_diff, diff(h_inverse, x2(i))];
-end
+h_diff = jacobian(h,x1);
+h_inverse_diff = jacobian(h_inverse,x2);
+
 h_diff_sub = h_diff;
 h_diff_sub = subs(h_diff_sub,'iD', h_inverse(3));
 h_diff_sub = subs(h_diff_sub,'iQ', h_inverse(4));
@@ -140,10 +139,11 @@ g1 = h_diff_sub; % size: 10 x 10
 g2 = f1_sub; % size: 10 x 1
 g1_diff = [];
 g2_diff = [];
-for i=1:n
-    g1_diff = [g1_diff, diff(g1,x2(i))];
-    g2_diff = [g2_diff, diff(g2,x2(i))];
-end
+% for i=1:n
+%     g1_diff = [g1_diff, diff(g1,x2(i))];
+%     g2_diff = [g2_diff, diff(g2,x2(i))];
+% end
+g2_diff = jacobian(g2,x2);
 
 % Amat2_cal = g1_diff * g2 + g1 * g2_diff;
 Amat2_cal = simplify(g1 * g2_diff);
@@ -156,6 +156,8 @@ Amat1_sub = subs(Amat1_sub,'igD', h_inverse(7));
 Amat1_sub = subs(Amat1_sub,'igQ', h_inverse(8));
 Amat1_sub = simplify(Amat1_sub);
 Amat2_cal2 = simplify(g1 * Amat1_sub * h_inverse_diff);
+
+difference = simplify(Amat2-Amat2_cal);
 
 % set numerical number to verify
 Wbase = 2 * 50 * pi;
@@ -183,6 +185,7 @@ wg = Wbase;
 vgD = 1;
 vgQ = 0;
 
+
 % steady state
 % idi; 
 % iqi; 
@@ -190,15 +193,23 @@ id = idr;
 iq = iqr; 
 vd = 1.0817; 
 vq = 0;  
-igd = idr; 
-igq = iqr; 
+% igd = idr; 
+% igq = iqr; 
 vqi = (wg - kp_pll * vq)/ki_pll; 
 delta = 3.6268/180*pi;
-% idi = (vd + Rf * id - wg * Lf * iq)/kii; 
-% iqi = (vq + Rf * iq + wg * Lf * id)/kii;
+
+vgd = vgD*cos(delta) + vgQ*sin(delta);
+vgq = -vgD*sin(delta) + vgQ*cos(delta);
+A = [Rg, -wg*Lg;
+     wg*Lg,Rg];
+b=[vd-vgd;vq-vgq];
+temp = inv(A)*b;
+igd = temp(1);igq=temp(2);
+idi = (vd + Rf * id - wg * Lf * iq)/kii; 
+iqi = (vq + Rf * iq + wg * Lf * id)/kii;
 % Attention！ The steady-state values used in the GFL_Steady are different, as follows 
-idi = (vd)/kii;
-iqi = (vq)/kii;
+% idi = (vd)/kii;
+% iqi = (vq)/kii;
 
 % Replace symbolic by numerical number
 Amat2 = subs(Amat2,'Cf',Cf);
