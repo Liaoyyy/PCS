@@ -39,7 +39,6 @@ p = vd*id + vq*iq;
 
 
 % System equation
-
 % LC filter
 did = (ed - vd + w * Lf * iq - Rf * id) / Lf;
 diq = (eq - vq - w * Lf * id - Rf * iq) / Lf;
@@ -102,7 +101,6 @@ wi_dc = 500 * 2 * pi;
 kpi_dc = L_dc*wi_dc;
 kii_dc = L_dc*(wi_dc^2)/4;
 v_dc_ref = 1;
-i_o = 0.25;
 
 Lg = 0.25/100/pi*2;
 Rg = 0.25/5*2;
