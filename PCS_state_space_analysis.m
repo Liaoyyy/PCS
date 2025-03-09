@@ -93,7 +93,6 @@ C_dc = 0.224;
 L_dc = 0.000125;
 v_ocv = 0.625;
 R_bat = 0.0625;
-%SOC = 0.5;
 SOC = 1;
 wv_dc = 50 * 2 * pi;
 kpv_dc = C_dc*wv_dc;
@@ -110,7 +109,7 @@ Lf = 0.05/Wbase;
 Rf = 0.01;
 vgD = 1;
 vgQ = 0;
-wg = 1 * Wbase;
+wg = 0.95 * Wbase;
 wf = 2*pi*10;
 Dw = 0.08*Wbase/Sbase;
 Pr = 0;
@@ -145,8 +144,11 @@ vq_ref = 0;
 % w = 0.95 * Wbase;
 % delta = 0.1547;
 
+
+% another steady state
 i_bat = 0.0000;
 v_dc = 1;
+
 i_bat_ref = 0.0000;
 duty_cycle = 0.375;
 
@@ -162,6 +164,8 @@ igd = 0.0000;
 igq = 0.0000;
 w = 1 * Wbase;
 delta = 0.001658;
+
+
 
 %% Replace symbolic by numerical number
 Amat = subs(Amat,'C_dc',C_dc);
@@ -221,7 +225,31 @@ Amat = subs(Amat,'delta',delta);
 %% Sweep parameters
 Amat = double(Amat);
 
+[phi,~] = eig(Amat);
 EigVec = eig(Amat);
 EigVecHz = EigVec/(2*pi);
 ZoomInAxis = [-20,10,-60,60];
-PlotPoleMap(EigVecHz,ZoomInAxis,9999);
+PlotPoleMap(EigVecHz,ZoomInAxis,100);
+
+
+%% Participation analysis
+psi=inv(phi);
+Participation = phi.*psi.';
+n = length(Participation);
+for i=1:n
+    for j=1:n
+        if abs(Participation(i,j))<1e-5
+            Participation(i,j) = 0;
+        else
+            Participation(i,j) = abs(Participation(i,j));
+        end
+    end
+end
+Participation = roundn(Participation,-5);
+% save  the result in excel
+xlswrite('PCS_analysis.xlsx',Participation,'sheet1','C3');
+state_name = ["i_bat";"v_dc";"i_bat_ref"; "duty_cycle";"idr"; "iqr"; "ed"; "eq"; "id"; "iq"; "vd"; "vq"; "igd"; "igq"; "w"; "delta"];
+xlswrite('PCS_analysis.xlsx',state_name,'sheet1','B3');
+
+xlswrite('PCS_analysis.xlsx',roundn(real(EigVecHz),-2)','sheet1','C1');
+xlswrite('PCS_analysis.xlsx',roundn(imag(EigVecHz),-2)','sheet1','C2');

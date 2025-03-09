@@ -39,6 +39,7 @@ p = vd*id + vq*iq;
 
 
 % System equation
+
 % LC filter
 did = (ed - vd + w * Lf * iq - Rf * id) / Lf;
 diq = (eq - vq - w * Lf * id - Rf * iq) / Lf;
@@ -93,8 +94,7 @@ C_dc = 0.224;
 L_dc = 0.000125;
 v_ocv = 0.625;
 R_bat = 0.0625;
-%SOC = 0.5;
-SOC = 1;
+SOC = 0.5;
 wv_dc = 50 * 2 * pi;
 kpv_dc = C_dc*wv_dc;
 kiv_dc = C_dc*wv_dc^2/4;
@@ -102,19 +102,20 @@ wi_dc = 500 * 2 * pi;
 kpi_dc = L_dc*wi_dc;
 kii_dc = L_dc*(wi_dc^2)/4;
 v_dc_ref = 1;
+i_o = 0.25;
 
-Lg = 0.25*2/(2*pi*50);
+Lg = 0.25/100/pi*2;
 Rg = 0.25/5*2;
 Cf = 0.02/Wbase;
 Lf = 0.05/Wbase;
 Rf = 0.01;
 vgD = 1;
 vgQ = 0;
-wg = 1 * Wbase;
+wg = 0.95 * Wbase;
 wf = 2*pi*10;
 Dw = 0.08*Wbase/Sbase;
 Pr = 0;
-W0 = 0;
+W0 = Wbase;
 wv_ac = 250*2*pi;
 kpv_ac = Cf*wv_ac;
 kiv_ac = Cf*wv_ac^2/4*100;
@@ -126,14 +127,67 @@ vq_ref = 0;
 
 
 %% Set steady state of state variables
+eqn = [di_bat == 0, dv_dc == 0, di_bat_ref == 0, dduty_cycle == 0, didr == 0, diqr == 0, ded == 0, deq == 0, did == 0, diq == 0, dvd == 0, dvq == 0, digd == 0, digq == 0, dw == 0, ddelta == 0];
+eqn = subs(eqn,'C_dc',C_dc);
+eqn = subs(eqn,'L_dc',L_dc);
+eqn = subs(eqn,'v_ocv',v_ocv);
+eqn = subs(eqn,'R_bat',R_bat);
+eqn = subs(eqn,'SOC',SOC);
+eqn = subs(eqn,'kpi_dc',kpi_dc);
+eqn = subs(eqn,'kii_dc',kii_dc);
+eqn = subs(eqn,'kpv_dc',kpv_dc);
+eqn = subs(eqn,'kiv_dc',kiv_dc);
+eqn = subs(eqn,'v_dc_ref',v_dc_ref);
+eqn = subs(eqn,'Rg',Rg);
+eqn = subs(eqn,'Lg',Lg);
+eqn = subs(eqn,'Cf',Cf);
+eqn = subs(eqn,'Lf',Lf);
+eqn = subs(eqn,'Rf',Rf);
+eqn = subs(eqn,'vgD',vgD);
+eqn = subs(eqn,'vgQ',vgQ);
+eqn = subs(eqn,'wg',wg);
+eqn = subs(eqn,'Dw',Dw);
+eqn = subs(eqn,'wf',wf);
+eqn = subs(eqn,'Pr',Pr);
+eqn = subs(eqn,'W0',W0);
+eqn = subs(eqn,'kpv_ac',kpv_ac);
+eqn = subs(eqn,'kiv_ac',kiv_ac);
+eqn = subs(eqn,'kpi_ac',kpi_ac);
+eqn = subs(eqn,'kii_ac',kii_ac);
+eqn = subs(eqn,'vd_ref',vd_ref);
+eqn = subs(eqn,'vq_ref',vq_ref);
+
+init_value = [0;1;0;0;0;0;1;0;0;0;1;0;0;0;Wbase;0];
+
+[solve_i_bat,solve_v_dc, solve_i_bat_ref, solve_duty_cycle, solve_idr,...
+    solve_iqr, solve_ed, solve_eq, solve_id, solve_iq, solve_vd, solve_vq, solve_igd,...
+    solve_igq, solve_w, solve_delta] = vpasolve(eqn,[i_bat v_dc i_bat_ref duty_cycle idr iqr ed eq id iq vd vq igd igq w delta],init_value);
+
+i_bat = double(solve_i_bat);
+v_dc = double(solve_v_dc);
+i_bat_ref = double(solve_i_bat_ref);
+duty_cycle = double(solve_duty_cycle);
+idr = double(solve_idr);
+iqr = double(solve_iqr);
+ed = double(solve_ed);
+eq = double(solve_eq);
+id = double(solve_id);
+iq = double(solve_iq);
+vd = double(solve_vd);
+vq = double(solve_vq);
+igd = double(solve_igd);
+igq = double(solve_igq);
+w = double(solve_w);
+delta = double(solve_delta);
+
 % i_bat = 0.5297;
 % v_dc = 1;
 % i_bat_ref = 0.5297;
 % duty_cycle = 0.4081;
 % 
 % 
-% idr = 0.3108;
-% iqr = 0.0678;
+% idr = 0.6234;
+% iqr = 0.06925;
 % ed = 1.001;
 % eq = 0.02689;
 % id = 0.3108;
@@ -144,24 +198,6 @@ vq_ref = 0;
 % igq = 0.04949;
 % w = 0.95 * Wbase;
 % delta = 0.1547;
-
-i_bat = 0.0000;
-v_dc = 1;
-i_bat_ref = 0.0000;
-duty_cycle = 0.375;
-
-idr = -0.0005;
-iqr = 0.01944;
-ed = 0.9992;
-eq = 0.0165;
-id = -0.0005;
-iq = 0.01944;
-vd = 0.9996;
-vq = 0.02843;
-igd = 0.0000;
-igq = 0.0000;
-w = 1 * Wbase;
-delta = 0.001658;
 
 %% Replace symbolic by numerical number
 Amat = subs(Amat,'C_dc',C_dc);
@@ -176,11 +212,6 @@ Amat = subs(Amat,'kii_dc',kii_dc);
 Amat = subs(Amat,'kpv_dc',kpv_dc);
 Amat = subs(Amat,'kiv_dc',kiv_dc);
 Amat = subs(Amat,'v_dc_ref',v_dc_ref);
-Amat = subs(Amat,'i_bat',i_bat);
-Amat = subs(Amat,'v_dc',v_dc);
-Amat = subs(Amat,'i_bat_ref',i_bat_ref);
-Amat = subs(Amat,'duty_cycle',duty_cycle);
-
 
 Amat = subs(Amat,'Rg',Rg);
 Amat = subs(Amat,'Lg',Lg);
@@ -202,6 +233,12 @@ Amat = subs(Amat,'kii_ac',kii_ac);
 
 Amat = subs(Amat,'vd_ref',vd_ref);
 Amat = subs(Amat,'vq_ref',vq_ref);
+
+
+Amat = subs(Amat,'i_bat',i_bat);
+Amat = subs(Amat,'v_dc',v_dc);
+Amat = subs(Amat,'i_bat_ref',i_bat_ref);
+Amat = subs(Amat,'duty_cycle',duty_cycle);
 
 Amat = subs(Amat,'idr',idr);
 Amat = subs(Amat,'iqr',iqr);
