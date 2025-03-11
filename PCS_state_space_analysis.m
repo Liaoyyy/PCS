@@ -1,4 +1,5 @@
-clc;clear;
+clc;
+clear;
 
 %% Base value
 BaseValue();
@@ -86,7 +87,7 @@ f_xu_ac = [didr; diqr; ded; deq; did; diq; dvd; dvq; digd; digq; dw; ddelta];
 state = [state_dc; state_ac];
 f_xu = [f_xu_dc; f_xu_ac];
 
-Amat = jacobian(f_xu,state);
+Amat_syms = jacobian(f_xu,state);
 
 %% Set numerical number
 C_dc = 0.224;
@@ -102,18 +103,19 @@ kpi_dc = L_dc*wi_dc;
 kii_dc = L_dc*(wi_dc^2)/4;
 v_dc_ref = 1;
 
-Lg = 0.25*2/(2*pi*50);
+% Lg = 0.25*2/(2*pi*50);
+Lg = 0.25/(2*pi*50);
 Rg = 0.25/5*2;
 Cf = 0.02/Wbase;
 Lf = 0.05/Wbase;
 Rf = 0.01;
 vgD = 1;
 vgQ = 0;
-wg = 0.95 * Wbase;
+wg = 1 * Wbase;
 wf = 2*pi*10;
 Dw = 0.08*Wbase/Sbase;
 Pr = 0;
-W0 = 0;
+W0 = Wbase;
 wv_ac = 250*2*pi;
 kpv_ac = Cf*wv_ac;
 kiv_ac = Cf*wv_ac^2/4*100;
@@ -123,133 +125,204 @@ kii_ac = Lf*(wi_ac^2)/4;
 vd_ref = 1;
 vq_ref = 0;
 
+%% Caculate steady state of state variables
+eqn = [di_bat == 0, dv_dc == 0, di_bat_ref == 0, dduty_cycle == 0, didr == 0, diqr == 0, ded == 0, deq == 0, did == 0, diq == 0, dvd == 0, dvq == 0, digd == 0, digq == 0, dw == 0, ddelta == 0];
+eqn = subs(eqn,'C_dc',C_dc);
+eqn = subs(eqn,'L_dc',L_dc);
+eqn = subs(eqn,'v_ocv',v_ocv);
+eqn = subs(eqn,'R_bat',R_bat);
+eqn = subs(eqn,'SOC',SOC);
+eqn = subs(eqn,'kpi_dc',kpi_dc);
+eqn = subs(eqn,'kii_dc',kii_dc);
+eqn = subs(eqn,'kpv_dc',kpv_dc);
+eqn = subs(eqn,'kiv_dc',kiv_dc);
+eqn = subs(eqn,'v_dc_ref',v_dc_ref);
+eqn = subs(eqn,'Rg',Rg);
+eqn = subs(eqn,'Lg',Lg);
+eqn = subs(eqn,'Cf',Cf);
+eqn = subs(eqn,'Lf',Lf);
+eqn = subs(eqn,'Rf',Rf);
+eqn = subs(eqn,'vgD',vgD);
+eqn = subs(eqn,'vgQ',vgQ);
+eqn = subs(eqn,'wg',wg);
+eqn = subs(eqn,'Dw',Dw);
+eqn = subs(eqn,'wf',wf);
+eqn = subs(eqn,'Pr',Pr);
+eqn = subs(eqn,'W0',W0);
+eqn = subs(eqn,'kpv_ac',kpv_ac);
+eqn = subs(eqn,'kiv_ac',kiv_ac);
+eqn = subs(eqn,'kpi_ac',kpi_ac);
+eqn = subs(eqn,'kii_ac',kii_ac);
+eqn = subs(eqn,'vd_ref',vd_ref);
+eqn = subs(eqn,'vq_ref',vq_ref);
 
-%% Set steady state of state variables
-% i_bat = 0.5297;
+init_value = [0;1;0;0;0;0;1;0;0;0;1;0;0;0;Wbase;0];
+
+[solve_i_bat,solve_v_dc, solve_i_bat_ref, solve_duty_cycle, solve_idr,...
+    solve_iqr, solve_ed, solve_eq, solve_id, solve_iq, solve_vd, solve_vq, solve_igd,...
+    solve_igq, solve_w, solve_delta] = vpasolve(eqn,[i_bat v_dc i_bat_ref duty_cycle idr iqr ed eq id iq vd vq igd igq w delta],init_value);
+
+i_bat = double(solve_i_bat);
+v_dc = double(solve_v_dc);
+i_bat_ref = double(solve_i_bat_ref);
+duty_cycle = double(solve_duty_cycle);
+idr = double(solve_idr);
+iqr = double(solve_iqr);
+ed = double(solve_ed);
+eq = double(solve_eq);
+id = double(solve_id);
+iq = double(solve_iq);
+vd = double(solve_vd);
+vq = double(solve_vq);
+igd = double(solve_igd);
+igq = double(solve_igq);
+w = double(solve_w);
+delta = double(solve_delta);
+
+
+% measured steady state
+% i_bat = 0.0000;
 % v_dc = 1;
-% i_bat_ref = 0.5297;
-% duty_cycle = 0.4081;
 % 
+% i_bat_ref = 0.0000;
+% duty_cycle = 0.375;
 % 
-% idr = 0.3108;
-% iqr = 0.0678;
-% ed = 1.001;
-% eq = 0.02689;
-% id = 0.3108;
-% iq = 0.0678;
+% idr = -0.0005;
+% iqr = 0.01944;
+% ed = 0.9992;
+% eq = 0.0165;
+% id = -0.0005;
+% iq = 0.01944;
 % vd = 0.9996;
-% vq = 0.02705;
-% igd = 0.3113;
-% igq = 0.04949;
-% w = 0.95 * Wbase;
-% delta = 0.1547;
-
-
-% another steady state
-i_bat = 0.0000;
-v_dc = 1;
-
-i_bat_ref = 0.0000;
-duty_cycle = 0.375;
-
-idr = -0.0005;
-iqr = 0.01944;
-ed = 0.9992;
-eq = 0.0165;
-id = -0.0005;
-iq = 0.01944;
-vd = 0.9996;
-vq = 0.02843;
-igd = 0.0000;
-igq = 0.0000;
-w = 1 * Wbase;
-delta = 0.001658;
-
+% vq = 0.02843;
+% igd = 0.0000;
+% igq = 0.0000;
+% w = 1 * Wbase;
+% delta = 0.001658;
 
 
 %% Replace symbolic by numerical number
-Amat = subs(Amat,'C_dc',C_dc);
-Amat = subs(Amat,'L_dc',L_dc);
-
-Amat = subs(Amat,'v_ocv',v_ocv);
-Amat = subs(Amat,'R_bat',R_bat);
-Amat = subs(Amat,'SOC',SOC);
-
-Amat = subs(Amat,'kpi_dc',kpi_dc);
-Amat = subs(Amat,'kii_dc',kii_dc);
-Amat = subs(Amat,'kpv_dc',kpv_dc);
-Amat = subs(Amat,'kiv_dc',kiv_dc);
-Amat = subs(Amat,'v_dc_ref',v_dc_ref);
-Amat = subs(Amat,'i_bat',i_bat);
-Amat = subs(Amat,'v_dc',v_dc);
-Amat = subs(Amat,'i_bat_ref',i_bat_ref);
-Amat = subs(Amat,'duty_cycle',duty_cycle);
-
-
-Amat = subs(Amat,'Rg',Rg);
-Amat = subs(Amat,'Lg',Lg);
-Amat = subs(Amat,'Cf',Cf);
-Amat = subs(Amat,'Lf',Lf);
-Amat = subs(Amat,'Rf',Rf);
-
-Amat = subs(Amat,'vgD',vgD);
-Amat = subs(Amat,'vgQ',vgQ);
-Amat = subs(Amat,'wg',wg);
-
-Amat = subs(Amat,'Dw',Dw);
-Amat = subs(Amat,'wf',wf);
-
-Amat = subs(Amat,'kpv_ac',kpv_ac);
-Amat = subs(Amat,'kiv_ac',kiv_ac);
-Amat = subs(Amat,'kpi_ac',kpi_ac);
-Amat = subs(Amat,'kii_ac',kii_ac);
-
-Amat = subs(Amat,'vd_ref',vd_ref);
-Amat = subs(Amat,'vq_ref',vq_ref);
-
-Amat = subs(Amat,'idr',idr);
-Amat = subs(Amat,'iqr',iqr);
-Amat = subs(Amat,'ed',ed);
-Amat = subs(Amat,'eq',eq);
-Amat = subs(Amat,'id',id);
-Amat = subs(Amat,'iq',iq);
-Amat = subs(Amat,'vd',vd);
-Amat = subs(Amat,'vq',vq);
-Amat = subs(Amat,'igd',igd);
-Amat = subs(Amat,'igq',igq);
-Amat = subs(Amat,'w',w);
-Amat = subs(Amat,'delta',delta);
-
+Para = [C_dc,L_dc,v_ocv,R_bat,SOC,kpi_dc,kii_dc,kpv_dc,kiv_dc,v_dc_ref,Rg,Lg,Cf,Lf,Rf,vgD,vgQ,wg,Dw,wf,kpv_ac,kiv_ac,kpi_ac,kii_ac,vd_ref,vq_ref];
+steadyState = [i_bat,v_dc,i_bat_ref,duty_cycle,idr,iqr,ed,eq,id,iq,vd,vq,igd,igq,w,delta];
+Amat = substitution(Amat_syms,Para,steadyState);
 
 
 %% Sweep parameters
-Amat = double(Amat);
-
 [phi,~] = eig(Amat);
 EigVec = eig(Amat);
 EigVecHz = EigVec/(2*pi);
 ZoomInAxis = [-20,10,-60,60];
-PlotPoleMap(EigVecHz,ZoomInAxis,100);
+PlotPoleMap(EigVecHz,ZoomInAxis,9999);
 
 
-%% Participation analysis
+%% State Participation Factor
 psi=inv(phi);
 Participation = phi.*psi.';
+Paticipation_amplitude = Participation;
 n = length(Participation);
 for i=1:n
     for j=1:n
         if abs(Participation(i,j))<1e-5
-            Participation(i,j) = 0;
+            Paticipation_amplitude(i,j) = 0;
         else
-            Participation(i,j) = abs(Participation(i,j));
+            Paticipation_amplitude(i,j) = abs(Participation(i,j));
         end
     end
 end
-Participation = roundn(Participation,-5);
-% save  the result in excel
-xlswrite('PCS_analysis.xlsx',Participation,'sheet1','C3');
-state_name = ["i_bat";"v_dc";"i_bat_ref"; "duty_cycle";"idr"; "iqr"; "ed"; "eq"; "id"; "iq"; "vd"; "vq"; "igd"; "igq"; "w"; "delta"];
-xlswrite('PCS_analysis.xlsx',state_name,'sheet1','B3');
+Paticipation_amplitude = roundn(Paticipation_amplitude,-5);
 
-xlswrite('PCS_analysis.xlsx',roundn(real(EigVecHz),-2)','sheet1','C1');
-xlswrite('PCS_analysis.xlsx',roundn(imag(EigVecHz),-2)','sheet1','C2');
+% save  the result in the excel file
+if 1
+    xlswrite('PCS_analysis.xlsx',Paticipation_amplitude,'sheet1','C3');
+    state_name = ["i_bat";"v_dc";"i_bat_ref"; "duty_cycle";"idr"; "iqr"; "ed"; "eq"; "id"; "iq"; "vd"; "vq"; "igd"; "igq"; "w"; "delta"];
+    xlswrite('PCS_analysis.xlsx',state_name,'sheet1','B3');
+
+    xlswrite('PCS_analysis.xlsx',roundn(real(EigVecHz),-2)','sheet1','C1');
+    xlswrite('PCS_analysis.xlsx',roundn(imag(EigVecHz),-2)','sheet1','C2');
+end
+
+%% Parameter Participation Factor
+xlswrite('PCS_analysis.xlsx',roundn(real(EigVecHz),-2)','sheet2','C1');
+xlswrite('PCS_analysis.xlsx',roundn(imag(EigVecHz),-2)','sheet2','C2');
+
+Rg_perturbation = Rg * 1e-5;
+Para_perturbation = Para;
+Para_perturbation(11) = Rg_perturbation + Para(11);
+Amat_perturbation = substitution(Amat_syms,Para_perturbation,steadyState);
+
+EigVec_perturbation = eig(Amat_perturbation);
+Rg_participation = (EigVec_perturbation - EigVec)/(2*pi)/Rg_perturbation;
+
+Lg_perturbation = Lg * 1e-5;
+Para_perturbation = Para;
+Para_perturbation(12) = Lg_perturbation + Para(12);
+Amat_perturbation = substitution(Amat_syms,Para_perturbation,steadyState);
+
+EigVec_perturbation = eig(Amat_perturbation);
+Lg_participation = (EigVec_perturbation - EigVec)/(2*pi)/Lg_perturbation;
+
+%% Mode correlation analysis
+
+
+
+
+
+
+
+function Amat = substitution(Amat_syms,Para,steadyState)
+    Amat = Amat_syms;
+
+    Amat = subs(Amat,'C_dc',Para(1));
+    Amat = subs(Amat,'L_dc',Para(2));
+
+    Amat = subs(Amat,'v_ocv',Para(3));
+    Amat = subs(Amat,'R_bat',Para(4));
+    Amat = subs(Amat,'SOC',Para(5));
+
+    Amat = subs(Amat,'kpi_dc',Para(6));
+    Amat = subs(Amat,'kii_dc',Para(7));
+    Amat = subs(Amat,'kpv_dc',Para(8));
+    Amat = subs(Amat,'kiv_dc',Para(9));
+    Amat = subs(Amat,'v_dc_ref',Para(10));
+
+
+    Amat = subs(Amat,'Rg',Para(11));
+    Amat = subs(Amat,'Lg',Para(12));
+    Amat = subs(Amat,'Cf',Para(13));
+    Amat = subs(Amat,'Lf',Para(14));
+    Amat = subs(Amat,'Rf',Para(15));
+
+    Amat = subs(Amat,'vgD',Para(16));
+    Amat = subs(Amat,'vgQ',Para(17));
+    Amat = subs(Amat,'wg',Para(18));
+
+    Amat = subs(Amat,'Dw',Para(19));
+    Amat = subs(Amat,'wf',Para(20));
+
+    Amat = subs(Amat,'kpv_ac',Para(21));
+    Amat = subs(Amat,'kiv_ac',Para(22));
+    Amat = subs(Amat,'kpi_ac',Para(23));
+    Amat = subs(Amat,'kii_ac',Para(24));
+
+    Amat = subs(Amat,'vd_ref',Para(25));
+    Amat = subs(Amat,'vq_ref',Para(26));
+
+    Amat = subs(Amat,'i_bat',steadyState(1));
+    Amat = subs(Amat,'v_dc',steadyState(2));
+    Amat = subs(Amat,'i_bat_ref',steadyState(3));
+    Amat = subs(Amat,'duty_cycle',steadyState(4));
+    Amat = subs(Amat,'idr',steadyState(5));
+    Amat = subs(Amat,'iqr',steadyState(6));
+    Amat = subs(Amat,'ed',steadyState(7));
+    Amat = subs(Amat,'eq',steadyState(8));
+    Amat = subs(Amat,'id',steadyState(9));
+    Amat = subs(Amat,'iq',steadyState(10));
+    Amat = subs(Amat,'vd',steadyState(11));
+    Amat = subs(Amat,'vq',steadyState(12));
+    Amat = subs(Amat,'igd',steadyState(13));
+    Amat = subs(Amat,'igq',steadyState(14));
+    Amat = subs(Amat,'w',steadyState(15));
+    Amat = subs(Amat,'delta',steadyState(16));
+
+    Amat = double(Amat);
+end
