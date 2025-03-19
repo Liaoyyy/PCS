@@ -3,7 +3,7 @@ clear;
 
 %% Base value
 BaseValue();
-enable_state_participation = 1;
+enable_state_participation = 0;
 enable_para_participation = 0;
 
 %% DC link variables
@@ -30,6 +30,7 @@ syms vgD vgQ wg % Grid parameters
 syms wf Dw Pr W0 % Droop control 
 syms vd_ref vq_ref % reference ac voltage
 syms kpv_ac kiv_ac kpi_ac kii_ac % controller parameters
+syms wv_ac wi_ac; % bandwidh
 
 
 %% AC link equation
@@ -220,25 +221,21 @@ PlotPoleMap(EigVecHz,ZoomInAxis,9999);
 if enable_state_participation
     psi=inv(phi);
     Participation = phi.*psi.';
+    Paticipation_amplitude = Participation;
     n = length(Participation);
-    Participation_amplitude = Participation;
-    Participation_result = strings(n,n);
     for i=1:n
         for j=1:n
             if abs(Participation(i,j))<1e-5
-                Participation_amplitude(i,j) = 0;
-                Participation_result(i,j) = "0+0j";
+                Paticipation_amplitude(i,j) = 0;
             else
                 Paticipation_amplitude(i,j) = abs(Participation(i,j));
-                Participation_result(i,j) = num2str(roundn(Participation(i,j),-3));
             end
         end
     end
-    Participation_amplitude = roundn(Participation_amplitude,-5);
+    Paticipation_amplitude = roundn(Paticipation_amplitude,-5);
 
     % save  the result in the excel file
-    xlswrite('PCS_analysis.xlsx',Participation_amplitude,'sheet1','C3');
-    xlswrite('PCS_analysis.xlsx',Participation_result,'sheet1','C21');
+    xlswrite('PCS_analysis.xlsx',Paticipation_amplitude,'sheet1','C3');
     state_name = ["i_bat";"v_dc";"i_bat_ref"; "duty_cycle";"idr"; "iqr"; "ed"; "eq"; "id"; "iq"; "vd"; "vq"; "igd"; "igq"; "w"; "delta"];
     xlswrite('PCS_analysis.xlsx',state_name,'sheet1','B3');
 
@@ -275,7 +272,7 @@ if enable_para_participation
         para_perturbation(i) = Para(i) + Para(i) * 1e-3;
         Amat_perturbation = substitution(Amat_syms,para_perturbation,steadyState);
         EigVec_perturbation = eig(Amat_perturbation);
-        para_participation = (EigVec_perturbation - EigVec)/(2*pi)/(1e-3); % Hz
+        para_participation = (EigVec_perturbation - EigVec)/(2*pi)/(Para(i) * 1e-3); % Hz
         for j =1:n
             if isnan(para_participation(j)) || abs(para_participation(j)) < 1e-3
                 para_result(i,j) = "0+0j";

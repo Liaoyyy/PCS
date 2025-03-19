@@ -1,4 +1,5 @@
-clc;clear;
+%clc;
+clear;
 
 %% Base value
 BaseValue();
@@ -82,18 +83,30 @@ vq_ref = 0;
 
 
 %% Set steady state of state variables
-idr = 0.6234;
-iqr = 0.06925;
-ed = 1.004;
-eq = 0.03765;
-id = 0.6234;
-iq = 0.06925;
+% idr = 0.6234;
+% iqr = 0.06925;
+% ed = 1.004;
+% eq = 0.03765;
+% id = 0.6234;
+% iq = 0.06925;
+% vd = 0.9996;
+% vq = 0.02709;
+% igd = 0.6239;
+% igq = 0.0511;
+% w = 0.95 * Wbase;
+% delta = 0.3066;
+idr = -0.0005;
+iqr = 0.01944;
+ed = 0.9992;
+eq = 0.0165;
+id = -0.0005;
+iq = 0.01944;
 vd = 0.9996;
-vq = 0.02709;
-igd = 0.6239;
-igq = 0.0511;
-w = 0.95 * Wbase;
-delta = 0.3066;
+vq = 0.02843;
+igd = 0.0000;
+igq = 0.0000;
+w = 1 * Wbase;
+delta = 0.001658;
 
 %% Replace symbolic by numerical number
 Amat = subs(Amat,'Rg',Rg);
@@ -129,7 +142,7 @@ Amat = subs(Amat,'delta',delta);
 
 
 %% Sweep parameters
-Amat = double(Amat)
+Amat = double(Amat);
 
 EigVec = eig(Amat);
 EigVecHz = EigVec/(2*pi);
