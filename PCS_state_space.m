@@ -223,5 +223,21 @@ Amat = double(Amat);
 
 EigVec = eig(Amat);
 EigVecHz = EigVec/(2*pi);
-ZoomInAxis = [-20,10,-60,60];
-PlotPoleMap(EigVecHz,ZoomInAxis,9999);
+ZoomInAxis = [-20,0,-60,60];
+% PlotPoleMap(EigVecHz,ZoomInAxis,9999);
+
+figure(1);
+set(gcf,'units','normalized','outerposition',[0.1 0.1 0.3 0.4]); 
+
+subplot(1,2,1)
+scatter(real(EigVecHz),imag(EigVecHz),'x','LineWidth',1.5); hold on; grid on;
+xlabel('Real Part (Hz)');
+ylabel('Imaginary Part (Hz)');
+title('Global pole map');
+
+subplot(1,2,2)
+scatter(real(EigVecHz),imag(EigVecHz),'x','LineWidth',1.5); hold on; grid on;
+xlabel('Real Part (Hz)');
+ylabel('Imaginary Part (Hz)');
+title('Zoomed pole map');
+axis(ZoomInAxis);
